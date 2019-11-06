@@ -1,0 +1,11 @@
+# Logs
+
+# Config
+.env
+env_variables.yaml
+
+# Misc
+.idea
+.DS_Store
+
+vendor/
