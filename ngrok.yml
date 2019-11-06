@@ -1,0 +1,4 @@
+tunnels:
+  go-backend:
+    proto: http
+    addr: 8000
