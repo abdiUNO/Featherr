@@ -1,7 +1,9 @@
 module github.com/abdiUNO/featherr
 
 require (
+	cloud.google.com/go/firestore v1.0.0 // indirect
 	cloud.google.com/go/storage v1.1.2
+	firebase.google.com/go v3.10.0+incompatible
 	github.com/caarlos0/env v3.5.0+incompatible
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/go-playground/errors v3.3.0+incompatible // indirect
@@ -22,4 +24,5 @@ require (
 	golang.org/x/sys v0.0.0-20191105142833-ac3223d80179 // indirect
 	golang.org/x/tools v0.0.0-20191105204322-ea203083f576 // indirect
 	golang.org/x/xerrors v0.0.0-20191011141410-1b5146add898 // indirect
+	google.golang.org/api v0.11.0
 )

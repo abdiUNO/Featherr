@@ -2,6 +2,7 @@ package cliques
 
 import (
 	"github.com/abdiUNO/featherr/api/auth"
+	"github.com/abdiUNO/featherr/utils"
 	"github.com/abdiUNO/featherr/utils/response"
 	"github.com/gorilla/mux"
 	"net/http"
@@ -53,6 +54,12 @@ var JoinGroup = func(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	go utils.SendToToic(&utils.MessageData{
+		MsgType: utils.UPDATE_CLIQUES,
+		Topic:   group.ID,
+		UserId:  token.UserId,
+	})
+
 	response.Json(w, map[string]interface{}{
 		"group": group,
 	})
@@ -74,6 +81,12 @@ var LeaveGroup = func(w http.ResponseWriter, r *http.Request) {
 		response.HandleError(w, ok)
 		return
 	}
+
+	go utils.SendToToic(&utils.MessageData{
+		MsgType: utils.UPDATE_CLIQUES,
+		Topic:   group.ID,
+		UserId:  token.UserId,
+	})
 
 	response.Json(w, map[string]interface{}{
 		"groupId": group.ID,

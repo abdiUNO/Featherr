@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/abdiUNO/featherr/api/auth"
 	"github.com/abdiUNO/featherr/api/friends"
+	"github.com/abdiUNO/featherr/utils"
 	"github.com/abdiUNO/featherr/utils/response"
 	"github.com/gorilla/mux"
 	"net/http"
@@ -11,6 +12,7 @@ import (
 
 var CreateConversation = func(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
+	token := r.Context().Value("token").(*auth.Token)
 	friendshipId := params["id"]
 	friendship, _ := friends.FindFriendshipById(&friendshipId)
 
@@ -24,6 +26,18 @@ var CreateConversation = func(w http.ResponseWriter, r *http.Request) {
 		response.HandleError(w, err)
 		return
 	}
+
+	var userId = friendship.FriendId
+
+	if friendship.FriendId == token.UserId {
+		userId = friendship.UserID
+	}
+
+	go utils.SendToToic(&utils.MessageData{
+		MsgType: utils.UPDATE_CONVERSATIONS,
+		Topic:   userId,
+		UserId:  token.UserId,
+	})
 
 	response.Json(w, map[string]interface{}{
 		"group": group,
@@ -60,6 +74,13 @@ var RemoveConversation = func(w http.ResponseWriter, r *http.Request) {
 		response.HandleError(w, ok)
 		return
 	}
+
+	token := r.Context().Value("token").(*auth.Token)
+	go utils.SendToToic(&utils.MessageData{
+		MsgType: utils.UPDATE_CONVERSATIONS,
+		Topic:   group.ID,
+		UserId:  token.UserId,
+	})
 
 	response.Json(w, map[string]interface{}{
 		"groupId": group.ID,

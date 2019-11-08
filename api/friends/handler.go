@@ -2,6 +2,7 @@ package friends
 
 import (
 	"github.com/abdiUNO/featherr/api/auth"
+	"github.com/abdiUNO/featherr/utils"
 	"github.com/abdiUNO/featherr/utils/response"
 	"github.com/gorilla/mux"
 	"net/http"
@@ -38,6 +39,12 @@ var AddFriend = func(w http.ResponseWriter, r *http.Request) {
 		response.HandleError(w, err)
 		return
 	}
+
+	go utils.SendToToic(&utils.MessageData{
+		MsgType: utils.UPDATE_FRIENDS,
+		Topic:   friendId,
+		UserId:  token.UserId,
+	})
 
 	response.Json(w, map[string]interface{}{
 		"friendships": friendship,
