@@ -47,7 +47,7 @@ var CreateUser = func(w http.ResponseWriter, r *http.Request) {
 }
 
 var Authenticate = func(w http.ResponseWriter, r *http.Request) {
-
+	fmt.Println("Called")
 	user := &User{}
 	//decode the request body into struct and failed if any error occur
 	if err := json.NewDecoder(r.Body).Decode(user); err != nil {
@@ -119,9 +119,10 @@ var ChangePassword = func(w http.ResponseWriter, r *http.Request) {
 }
 
 var FindUsers = func(w http.ResponseWriter, r *http.Request) {
+	token := r.Context().Value("token").(*Token)
 	query := r.FormValue("query")
 
-	users, err := QueryUsers(query)
+	users, err := QueryUsers(token.UserId, query)
 	if err != nil {
 		response.HandleError(w, err)
 		return

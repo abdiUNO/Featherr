@@ -4,12 +4,5 @@ env: flex
 includes:
   - env_variables.yaml
 
-env_variables:
-  OAUTH2_CALLBACK: https://<your-project-id>.appspot.com/oauth2callback
-
-# This sample incurs costs to run on the App Engine flexible environment.
-# The settings below are to reduce costs during testing and are not appropriate
-# for production use. For more information, see:
-# https://cloud.google.com/appengine/docs/flexible/python/configuring-your-app-with-app-yaml
 beta_settings:
   cloud_sql_instances: featherr:us-central1:featherr-sql=tcp:3306

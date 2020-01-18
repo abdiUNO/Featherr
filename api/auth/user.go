@@ -4,11 +4,12 @@ import (
 	"fmt"
 	"log"
 	"strings"
-
-	"github.com/abdiUNO/featherr/utils"
+	"time"
 
 	"github.com/abdiUNO/featherr/config"
 	"github.com/abdiUNO/featherr/database/orm"
+	"github.com/abdiUNO/featherr/utils"
+	"github.com/satori/go.uuid"
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/jinzhu/gorm"
@@ -42,6 +43,22 @@ type User struct {
 	FcmToken      string  `json:"fcmToken"`
 	JwtToken      string  `sql:"-" json:"jwtToken"`
 	EmailVerified bool    `sql:"not null;DEFAULT:false" json:"emailVerified"`
+}
+
+type Blocked struct {
+	ID        string    `database:"primary_key;type:varchar(255);" json:"id"`
+	User      *User     `json:"-"`
+	UserID    string    `json:"-"`
+	FriendId  string    `json:"friendId"`
+	Friend    *User     `json:"friend";gorm:"association_foreignkey:id;foreignkey:friend_id"`
+	CreatedAt time.Time `json:"-"`
+	UpdatedAt time.Time `json:"-"`
+}
+
+func (friendship *Blocked) BeforeCreate(scope *gorm.Scope) error {
+	u1 := uuid.Must(uuid.NewV4(), nil)
+	scope.SetColumn("ID", u1.String())
+	return nil
 }
 
 func (user *User) TableName() string {
@@ -216,16 +233,62 @@ func Login(email string, password string, fcmToken string) (*User, *utils.Error)
 	return user, nil
 }
 
-func QueryUsers(query string) (*[]User, *utils.Error) {
+func QueryUsers(userID string, query string) (*[]User, *utils.Error) {
 	users := &[]User{}
+	var blockedList []string
+	var idStr string
 
-	err := GetDB().Table("users").Where("full_name LIKE ?", query+"%").Find(&users).Error
+	err := GetDB().Table("blockeds").Where("user_id = ?", userID).Pluck("friend_id", &blockedList).Error
+
+	if err != nil {
+		return &[]User{}, utils.NewError(utils.EINVALID, "invalid login credentials. Please try again", err)
+	}
+
+	for i, id := range blockedList {
+		if i == 0 {
+			idStr += "'" + id + "'"
+		} else {
+			idStr += ",'" + id + "'"
+		}
+	}
+
+	fmt.Println(len(idStr))
+
+	if len(idStr) <= 0 {
+		err = GetDB().Table("users").Where("full_name LIKE ?", query+"%").Find(&users).Error
+	} else {
+		err = GetDB().Table("users").Where("id NOT IN ("+idStr+") AND full_name LIKE ?", query+"%").Find(&users).Error
+	}
 
 	if err != nil {
 		return &[]User{}, utils.NewError(utils.EINVALID, "invalid login credentials. Please try again", err)
 	}
 
 	return users, nil
+}
+
+func (friendship *Blocked) BlockUser(user *User, friend *User) (*Blocked, *utils.Error) {
+	var userId = user.ID
+	var friendId = friend.ID
+
+	err := GetDB().Where("friend_id = ? AND  user_id = ?", userId, friendId).Or("user_id = ? AND  friend_id = ?", userId, friendId).Find(&friendship).Error
+
+	if err != gorm.ErrRecordNotFound {
+		return &Blocked{}, utils.NewError(utils.ECONFLICT, "friend already blocked", err)
+	}
+
+	friendship.User = user
+	friendship.UserID = userId
+	friendship.Friend = friend
+	friendship.FriendId = friendId
+
+	err = GetDB().Save(&friendship).Error
+
+	if err != nil {
+		return &Blocked{}, utils.NewError(utils.EINVALID, "could not block friend", err)
+	}
+
+	return friendship, nil
 }
 
 func GetUser(u string) *User {

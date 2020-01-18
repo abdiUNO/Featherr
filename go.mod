@@ -24,5 +24,4 @@ require (
 	golang.org/x/sys v0.0.0-20191105142833-ac3223d80179 // indirect
 	golang.org/x/tools v0.0.0-20191105204322-ea203083f576 // indirect
 	golang.org/x/xerrors v0.0.0-20191011141410-1b5146add898 // indirect
-	google.golang.org/api v0.11.0
 )

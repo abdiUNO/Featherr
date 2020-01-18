@@ -38,7 +38,7 @@ func InitDatabase() {
 	orm.DBCon.Set("database:table_options", "ENGINE=InnoDB")
 	orm.DBCon.Set("database:table_options", "collation_connection=utf8_general_ci")
 
-	orm.DBCon.Debug().AutoMigrate(&auth.User{}, &friends.Friendship{}, &cliques.Group{}, &cliques.GroupUser{}, &chats.Conversation{}, &chats.ConversationUser{})
+	orm.DBCon.Debug().AutoMigrate(&auth.User{}, &friends.Friendship{}, &cliques.Group{}, &cliques.GroupUser{}, &chats.Conversation{}, &chats.ConversationUser{}, &auth.Blocked{})
 	orm.DBCon.LogMode(false)
 
 }

@@ -17,9 +17,10 @@ type Friendship struct {
 	Friend    *auth.User `json:"friend";gorm:"association_foreignkey:id;foreignkey:friend_id"`
 	CreatedAt time.Time  `json:"-"`
 	UpdatedAt time.Time  `json:"-"`
+	DeletedAt *time.Time `sql:"index"`
 }
 
-func (model *Friendship) BeforeCreate(scope *gorm.Scope) error {
+func (friendship *Friendship) BeforeCreate(scope *gorm.Scope) error {
 	u1 := uuid.Must(uuid.NewV4(), nil)
 	scope.SetColumn("ID", u1.String())
 	return nil
@@ -75,17 +76,29 @@ func FindFriends(user *auth.User) ([]*auth.User, *utils.Error) {
 	//err := GetDB().Table("friendships").Select("*").Joins("JOIN users ON users.id = friend_id").Where("user_id = ?", user.ID).Scan(&friends).Error
 	err := GetDB().Raw(`SELECT * from friendships 
 							JOIN users ON users.id = user_id 
-							WHERE friend_id = ? 
+							WHERE friend_id = ? AND friendships.deleted_at IS NULL
 							UNION 
 							SELECT * from friendships 
 							JOIN users ON users.id = friend_id
-							WHERE user_id = ?`, userId, userId).Scan(&friends).Error
+							WHERE user_id = ? AND friendships.deleted_at IS NULL`, userId, userId).Scan(&friends).Error
 
 	if err != nil {
 		return []*auth.User{}, utils.NewError(utils.EINTERNAL, "internal database error", nil)
 	}
 
 	return friends, nil
+}
+
+func DeleteFriendShip(id *string) *utils.Error {
+	if err := GetDB().Exec(`
+		UPDATE friendships
+		SET deleted_at = NOW()
+		WHERE friendships.id = ?
+	`, id).Error; err != nil {
+		return utils.NewError(utils.EINTERNAL, err.Error(), err)
+	}
+
+	return nil
 }
 
 //func (friendship *Friendship) AddFriend(user *users.UserModel, friendId string) (*Friendship, *utils.Error) {

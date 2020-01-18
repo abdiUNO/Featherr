@@ -26,6 +26,7 @@ func (s *Server) SetupRoutes() {
 	s.router.HandleFunc("/api/users/{id}/otp-code", auth.ValidateOTP).Queries("code", "{code}").Methods("POST")
 
 	s.router.HandleFunc("/api/friends", friends.GetFriends).Methods("GET")
+	s.router.HandleFunc("/api/block/{id}", friends.BlockUser).Methods("DELETE")
 	s.router.HandleFunc("/api/users/{id}/add", friends.AddFriend).Methods("PUT")
 
 	s.router.HandleFunc("/api/friends/{id}/conversations", chats.CreateConversation).Methods("POST")
